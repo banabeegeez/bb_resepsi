@@ -1,5 +1,5 @@
 /* ============================================
-   Pinangan Bana & Bella — Slide Online
+   BB Resepsi — Slide Online
    Interactive Slideshow Engine
    ============================================ */
 
@@ -48,10 +48,11 @@
   let touchStartY = 0;
   let isDragging = false;
   const totalImages = images.length;
-  const preloadRange = 1; // Preload only the current image and the nearest neighbor
+  const preloadRange = 2; // Preload the current image and the two nearest neighbors
   const imageCache = new Set();
-  const thumbRenderRadius = 14; // render only nearby thumbnails initially
-  const thumbUnloadRadius = 28; // keep a wider buffer before unloading
+  const preloadLinkCache = new Set();
+  const thumbRenderRadius = 8; // render only nearby thumbnails initially
+  const thumbUnloadRadius = 18; // keep a wider buffer before unloading
   let visibleThumbStart = 0;
   let visibleThumbEnd = -1;
   let deferredPreloadId = null;
@@ -65,7 +66,7 @@
     initThumbnailObserver();
     createParticles();
     bindEvents();
-    preloadPriorityImages(0, 1, 2);
+    preloadPriorityImages(0, 1, 2, 3);
     goToSlide(0, false);
     updateBackground(0);
   }
@@ -215,6 +216,8 @@
     indices.forEach((index) => {
       if (index < 0 || index >= totalImages) return;
       const href = `images/${images[index]}`;
+      if (preloadLinkCache.has(href)) return;
+      preloadLinkCache.add(href);
       const link = document.createElement("link");
       link.rel = "preload";
       link.as = "image";
@@ -234,10 +237,7 @@
 
     img.loading = priority ? "eager" : "lazy";
     img.decoding = "async";
-    if (priority) {
-      img.fetchPriority = "high";
-    }
-
+    img.fetchPriority = priority ? "high" : "auto";
     img.src = img.dataset.src;
     img.onload = () => {
       imageCache.add(img.dataset.src);
@@ -281,7 +281,19 @@
       : "none";
     slideTrack.style.transform = `translateX(${offset}%)`;
 
+    const nextIndex = (currentIndex + 1) % totalImages;
+    const next2Index = (currentIndex + 2) % totalImages;
+    const prevIndex = (currentIndex - 1 + totalImages) % totalImages;
+    const prev2Index = (currentIndex - 2 + totalImages) % totalImages;
+
     // Load current + nearby images
+    preloadPriorityImages(
+      currentIndex,
+      nextIndex,
+      next2Index,
+      prevIndex,
+      prev2Index,
+    );
     preloadImages(currentIndex);
     scheduleDeferredPreload(currentIndex);
     updateVisibleThumbnails(currentIndex);
@@ -354,7 +366,9 @@
   function deferredPreload(centerIndex) {
     const nextIndex = (centerIndex + 1) % totalImages;
     const prevIndex = (centerIndex - 1 + totalImages) % totalImages;
-    [nextIndex, prevIndex].forEach((idx) => {
+    const next2Index = (centerIndex + 2) % totalImages;
+    const prev2Index = (centerIndex - 2 + totalImages) % totalImages;
+    [nextIndex, prevIndex, next2Index, prev2Index].forEach((idx) => {
       const slideEl = slideTrack.children[idx];
       if (!slideEl) return;
       const img = slideEl.querySelector("img");
