@@ -1,5 +1,5 @@
 /* ============================================
-   BB Resepsi — Slide Online
+   Resepsi Nikah Bana & Bella — Slide Online
    Interactive Slideshow Engine
    ============================================ */
 
