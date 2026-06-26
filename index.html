@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slide Online - BB Resepsi</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #fff;
+      }
+      .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .slide {
+        display: none;
+        width: 100%;
+        height: 100vh;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.85);
+      }
+      .slide.active {
+        display: block;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.25),
+          rgba(0, 0, 0, 0.55)
+        );
+        pointer-events: none;
+      }
+      .header {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 2;
+      }
+      .header h1,
+      .header p {
+        margin: 0;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+      }
+      .header h1 {
+        font-size: clamp(2rem, 4vw, 4rem);
+        letter-spacing: 0.05em;
+      }
+      .header p {
+        margin-top: 0.5rem;
+        font-size: 1rem;
+        max-width: 34rem;
+      }
+      .controls {
+        position: absolute;
+        inset: auto 20px 20px;
+        display: flex;
+        gap: 1rem;
+        z-index: 2;
+      }
+      .controls button {
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 0.85rem 1.2rem;
+        font-size: 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .controls button:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .dots {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.6rem;
+        z-index: 2;
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          background 0.2s;
+      }
+      .dot.active {
+        background: #fff;
+        transform: scale(1.2);
+      }
+      .footer {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        z-index: 2;
+      }
+      @media (max-width: 640px) {
+        .header {
+          left: 16px;
+          right: 16px;
+        }
+        .controls {
+          bottom: 16px;
+          right: 16px;
+          left: auto;
+          flex-direction: column;
+        }
+        .controls button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero" id="hero">
+      <div class="header">
+        <h1>Slide Online</h1>
+        <p>
+          Gunakan panah atau tombol untuk melihat galeri foto resepsi. Halaman
+          ini berjalan secara offline asalkan file gambar tetap ada dalam folder
+          <strong>images/</strong>.
+        </p>
+      </div>
+      <div class="footer">BB Resepsi</div>
+      <div id="slides"></div>
+      <div class="overlay"></div>
+      <div class="controls">
+        <button id="prev">Sebelumnya</button>
+        <button id="next">Selanjutnya</button>
+        <button id="toggle">Putar Otomatis</button>
+      </div>
+      <div class="dots" id="dots"></div>
+    </div>
+    <script>
+      const imageFiles = [
+        "images/JHO_0265.webp",
+        "images/JHO_0267.webp",
+        "images/JHO_0269.webp",
+        "images/JHO_0270.webp",
+        "images/JHO_0271.webp",
+        "images/JHO_0272.webp",
+        "images/JHO_0273.webp",
+        "images/JHO_0274.webp",
+        "images/JHO_0275.webp",
+        "images/JHO_0276.webp",
+        "images/JHO_0277.webp",
+        "images/JHO_0278.webp",
+        "images/JHO_0279.webp",
+        "images/JHO_0280.webp",
+        "images/JHO_0281.webp",
+      ];
+
+      const slidesContainer = document.getElementById("slides");
+      const dotsContainer = document.getElementById("dots");
+      const prevButton = document.getElementById("prev");
+      const nextButton = document.getElementById("next");
+      const toggleButton = document.getElementById("toggle");
+
+      let currentIndex = 0;
+      let autoPlay = false;
+      let intervalId = null;
+
+      function createSlide(src, index) {
+        const slide = document.createElement("div");
+        slide.className = "slide";
+        slide.dataset.index = index;
+        slide.innerHTML = `<img src="${src}" alt="Slide ${index + 1}" />`;
+        return slide;
+      }
+
+      function createDot(index) {
+        const dot = document.createElement("button");
+        dot.className = "dot";
+        dot.type = "button";
+        dot.title = `Slide ${index + 1}`;
+        dot.addEventListener("click", () => showSlide(index));
+        return dot;
+      }
+
+      function setupSlides() {
+        imageFiles.forEach((src, index) => {
+          slidesContainer.appendChild(createSlide(src, index));
+          dotsContainer.appendChild(createDot(index));
+        });
+      }
+
+      function showSlide(index) {
+        const slides = document.querySelectorAll(".slide");
+        const dots = document.querySelectorAll(".dot");
+        currentIndex = (index + slides.length) % slides.length;
+        slides.forEach((slide, i) =>
+          slide.classList.toggle("active", i === currentIndex),
+        );
+        dots.forEach((dot, i) =>
+          dot.classList.toggle("active", i === currentIndex),
+        );
+      }
+
+      function nextSlide() {
+        showSlide(currentIndex + 1);
+      }
+      function prevSlide() {
+        showSlide(currentIndex - 1);
+      }
+
+      function setAutoPlay(enabled) {
+        autoPlay = enabled;
+        toggleButton.textContent = autoPlay
+          ? "Stop Otomatis"
+          : "Putar Otomatis";
+        if (intervalId) clearInterval(intervalId);
+        if (autoPlay) intervalId = setInterval(nextSlide, 5000);
+      }
+
+      prevButton.addEventListener("click", () => {
+        prevSlide();
+        setAutoPlay(false);
+      });
+
+      nextButton.addEventListener("click", () => {
+        nextSlide();
+        setAutoPlay(false);
+      });
+
+      toggleButton.addEventListener("click", () => setAutoPlay(!autoPlay));
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight") nextSlide();
+        if (event.key === "ArrowLeft") prevSlide();
+      });
+
+      setupSlides();
+      showSlide(0);
+    </script>
+  </body>
+</html>
