@@ -2918,11 +2918,11 @@ const images = [
 // Cover images (displayed on landing page before entering gallery)
 // Add your cover image file(s) here, e.g. "cover.jpg"
 const covers = [
-  // "cover.jpg",
+  "cover.webp",
 ];
 
 // Logo images (displayed in header)
 // Add your logo file(s) here, e.g. "logo.png"
 const logos = [
-  // "logo.png",
+  "LOGO BB GOLD.png",
 ];
