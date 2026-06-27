@@ -1,4 +1,4 @@
-const images = [
+﻿const images = [
   'bb (1).webp',
   'bb (2).webp',
   'bb (3).webp',
@@ -6,10 +6,6 @@ const images = [
   'bb (5).webp',
   'bb (6).webp',
   'bb (7).webp',
-  'IKY_0001.webp',
-  'IKY_0002.webp',
-  'IKY_0003.webp',
-  'IKY_0008.webp',
   'IKY_0011.webp',
   'IKY_0012.webp',
   'IKY_0014.webp',
@@ -2916,13 +2912,12 @@ const images = [
 ]
 
 // Cover images (displayed on landing page before entering gallery)
-// Add your cover image file(s) here, e.g. "cover.jpg"
 const covers = [
   "cover.webp",
 ];
 
 // Logo images (displayed in header)
-// Add your logo file(s) here, e.g. "logo.png"
 const logos = [
   "LOGO BB GOLD.png",
 ];
+
