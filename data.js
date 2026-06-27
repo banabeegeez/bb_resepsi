@@ -1,4 +1,4 @@
-﻿const images = [
+const images = [
   'bb (1).webp',
   'bb (2).webp',
   'bb (3).webp',
@@ -2914,3 +2914,15 @@
   'TBC_1874.webp',
   'TBC_1875.webp',
 ]
+
+// Cover images (displayed on landing page before entering gallery)
+// Add your cover image file(s) here, e.g. "cover.jpg"
+const covers = [
+  // "cover.jpg",
+];
+
+// Logo images (displayed in header)
+// Add your logo file(s) here, e.g. "logo.png"
+const logos = [
+  // "logo.png",
+];
