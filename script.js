@@ -35,6 +35,17 @@
   const lightboxImg = $("#lightbox-img");
   const lightboxClose = $("#lightbox-close");
   const particlesContainer = $("#particles");
+  const coverLayer = $("#cover-layer");
+  const coverImg = $("#cover-img");
+  const coverSkipBtn = $("#cover-skip-btn");
+  const brandLogo = $("#brand-logo");
+  const brandIconSvg = $("#brand-icon-svg");
+  const brandIcon = $("#brand-icon");
+
+  // --- Image base paths ---
+  const imgBase = "images/";
+  const coversBase = "covers/";
+  const logosBase = "logos/";
 
   // --- State ---
   let currentIndex = 0;
@@ -47,15 +58,19 @@
   let touchStartX = 0;
   let touchStartY = 0;
   let isDragging = false;
+  let coverShown = false;
   const totalImages = images.length;
-  const preloadRange = 2; // Preload the current image and the two nearest neighbors
+  const preloadRange = 2;
   const imageCache = new Set();
   const preloadLinkCache = new Set();
-  const thumbRenderRadius = 8; // render only nearby thumbnails initially
-  const thumbUnloadRadius = 18; // keep a wider buffer before unloading
+  const thumbRenderRadius = 8;
+  const thumbUnloadRadius = 18;
   let visibleThumbStart = 0;
   let visibleThumbEnd = -1;
   let deferredPreloadId = null;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   // --- Initialize ---
   function init() {
@@ -66,9 +81,57 @@
     initThumbnailObserver();
     createParticles();
     bindEvents();
+    displayLogoIfExists();
+    displayCoverIfExists();
     preloadPriorityImages(0, 1, 2, 3);
-    goToSlide(0, false);
-    updateBackground(0);
+    if (!coverShown) {
+      goToSlide(0, false);
+      updateBackground(0);
+    }
+  }
+
+  // --- Logo Display ---
+  function displayLogoIfExists() {
+    if (typeof logos !== "undefined" && logos.length > 0) {
+      brandLogo.src = logosBase + logos[0];
+      brandLogo.onload = () => {
+        brandLogo.classList.remove("hidden");
+        brandIconSvg.classList.add("hidden");
+        brandIcon.classList.add("has-logo");
+      };
+      brandLogo.onerror = () => {
+        // If logo fails to load, keep the default SVG icon
+        brandLogo.classList.add("hidden");
+        brandIconSvg.classList.remove("hidden");
+      };
+    }
+  }
+
+  // --- Cover Display ---
+  function displayCoverIfExists() {
+    if (typeof covers !== "undefined" && covers.length > 0) {
+      coverShown = true;
+      coverImg.src = coversBase + covers[0];
+      coverLayer.classList.remove("hidden");
+    } else {
+      coverLayer.classList.add("hidden");
+    }
+  }
+
+  function hideCover() {
+    if (coverShown) {
+      coverLayer.classList.add("hidden");
+      setTimeout(() => {
+        goToSlide(0, false);
+        updateBackground(0);
+      }, 400);
+      coverShown = false;
+    }
+  }
+
+  // --- Helper: Extract filename without extension ---
+  function getFileNameWithoutExtension(filename) {
+    return filename.split(".").slice(0, -1).join(".");
   }
 
   // --- Create Slides ---
@@ -83,11 +146,17 @@
       img.alt = `Foto ${i + 1}`;
       img.loading = "lazy";
       img.decoding = "async";
-      img.dataset.src = `images/${images[i]}`;
+      img.dataset.src = `${imgBase}${images[i]}`;
       // Don't set src yet — lazy load slides and preload only nearby images
       img.addEventListener("click", () => openLightbox(i));
 
+      // Create photo label overlay
+      const label = document.createElement("div");
+      label.className = "photo-label";
+      label.textContent = getFileNameWithoutExtension(images[i]);
+
       slide.appendChild(img);
+      slide.appendChild(label);
       fragment.appendChild(slide);
     }
     slideTrack.appendChild(fragment);
@@ -100,7 +169,7 @@
       const thumb = document.createElement("div");
       thumb.className = "thumb";
       thumb.dataset.index = i;
-      thumb.dataset.src = `images/${images[i]}`;
+      thumb.dataset.src = `${imgBase}${images[i]}`;
 
       if (i <= thumbRenderRadius) {
         const img = createThumbImage(i);
@@ -120,7 +189,7 @@
     const img = document.createElement("img");
     img.loading = "lazy";
     img.decoding = "async";
-    img.dataset.src = `images/${images[index]}`;
+    img.dataset.src = `${imgBase}${images[index]}`;
     img.alt = `Thumbnail ${index + 1}`;
     img.className = "thumb-img";
     img.src = img.dataset.src;
@@ -215,7 +284,7 @@
   function preloadPriorityImages(...indices) {
     indices.forEach((index) => {
       if (index < 0 || index >= totalImages) return;
-      const href = `images/${images[index]}`;
+      const href = `${imgBase}${images[index]}`;
       if (preloadLinkCache.has(href)) return;
       preloadLinkCache.add(href);
       const link = document.createElement("link");
@@ -255,6 +324,7 @@
 
   // --- Create Floating Particles ---
   function createParticles() {
+    if (prefersReducedMotion) return;
     for (let i = 0; i < 15; i++) {
       const particle = document.createElement("div");
       particle.className = "particle";
@@ -388,7 +458,7 @@
 
   // --- Background ---
   function updateBackground(index) {
-    const imgUrl = `images/${images[index]}`;
+    const imgUrl = `${imgBase}${images[index]}`;
     const bgLoader = new Image();
     bgLoader.src = imgUrl;
     bgLoader.onload = () => swapBackground(imgUrl);
@@ -480,7 +550,7 @@
   function openLightbox(index) {
     lightboxImg.loading = "lazy";
     lightboxImg.decoding = "async";
-    lightboxImg.src = `images/${images[index]}`;
+    lightboxImg.src = `${imgBase}${images[index]}`;
     lightbox.classList.add("open");
     document.body.style.overflow = "hidden";
   }
@@ -499,10 +569,12 @@
       document.documentElement.requestFullscreen().catch(() => {});
       fsExpand.classList.add("hidden");
       fsCollapse.classList.remove("hidden");
+      thumbStrip.classList.add("hidden");
     } else {
       document.exitFullscreen();
       fsExpand.classList.remove("hidden");
       fsCollapse.classList.add("hidden");
+      thumbStrip.classList.remove("hidden");
     }
   }
 
@@ -510,6 +582,7 @@
     if (!document.fullscreenElement) {
       fsExpand.classList.remove("hidden");
       fsCollapse.classList.add("hidden");
+      thumbStrip.classList.remove("hidden");
     }
   });
 
@@ -602,6 +675,12 @@
 
   // --- Bind Events ---
   function bindEvents() {
+    // Cover skip button
+    coverSkipBtn.addEventListener("click", hideCover);
+    coverLayer.addEventListener("click", (e) => {
+      if (e.target === coverLayer) hideCover();
+    });
+
     // Navigation
     prevBtn.addEventListener("click", () => {
       prevSlide();

@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
-    <title>Resepsi Nikah Bana & Bella — Slide Online</title>
+    <title>Resepsi Nikah Bana &amp; Bella — Slide Online</title>
     <meta
       name="description"
       content="Galeri foto online momen resepsi BB. Lihat momen-momen indah dalam slideshow yang elegan."
@@ -31,14 +31,45 @@
     <!-- Floating particles -->
     <div id="particles"></div>
 
+    <!-- Cover Layer -->
+    <div class="cover-layer hidden" id="cover-layer">
+      <div class="cover-content">
+        <img id="cover-img" src="" alt="Cover" />
+        <button
+          class="cover-skip-btn"
+          id="cover-skip-btn"
+          aria-label="Skip to gallery"
+        >
+          <span>Masuk Gallery</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Main app -->
     <main class="app">
       <!-- Header -->
       <header class="header" id="header">
         <div class="header-left">
           <div class="brand">
-            <div class="brand-icon">
+            <div class="brand-icon" id="brand-icon">
+              <img
+                id="brand-logo"
+                class="brand-logo hidden"
+                src=""
+                alt="Logo"
+              />
               <svg
+                id="brand-icon-svg"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -50,7 +81,7 @@
               </svg>
             </div>
             <div class="brand-text">
-              <h1>Resepsi Nikah Bana & Bella</h1>
+              <h1>Resepsi Nikah Bana &amp; Bella</h1>
               <p class="brand-subtitle">Slide Online</p>
             </div>
           </div>
@@ -59,7 +90,7 @@
           <div class="counter-pill" id="counter-pill">
             <span id="current-num">1</span>
             <span class="counter-divider">/</span>
-            <span id="total-num">174</span>
+            <span id="total-num">0</span>
           </div>
           <button class="icon-btn" id="fullscreen-btn" aria-label="Fullscreen">
             <svg
